@@ -1,0 +1,770 @@
+/* css/style.css */
+/* Estilos de estética competición Rally WRC para el menú, cuenta atrás, HUD, velocímetro con tope 60% y minimapa */
+
+:root {
+    --bg-dark: rgba(15, 23, 42, 0.9);
+    --panel-bg: rgba(30, 41, 59, 0.92);
+    --border-col: rgba(148, 163, 184, 0.25);
+    --accent-yellow: #facc15;
+    --accent-orange: #f97316;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+    --accent-blue: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #0f172a;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+}
+
+#gameCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    z-index: 1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* SUPERPOSICIONES (MENÚ Y RESULTADOS) */
+.overlay-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.68) 0%, rgba(2, 6, 23, 0.9) 100%);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.menu-panel {
+    width: 100%;
+    max-width: 1040px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-col);
+    border-radius: 16px;
+    padding: 26px 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-col);
+    padding-bottom: 16px;
+}
+
+.wrc-tag {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--accent-orange), var(--accent-yellow));
+    color: #0f172a;
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+}
+
+.title-block h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #ffffff;
+}
+
+.title-block p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-top: 3px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* SELECTOR DE MODO (PUNTO A->B vs CIRCUITO) */
+.mode-selector-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.75);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-col);
+}
+
+.mode-label {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--accent-yellow);
+    letter-spacing: 0.8px;
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.mode-btn {
+    background: rgba(51, 65, 85, 0.65);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.mode-btn:hover {
+    color: #ffffff;
+    background: rgba(71, 85, 105, 0.8);
+}
+
+.mode-btn.active {
+    background: rgba(250, 204, 21, 0.16);
+    color: var(--accent-yellow);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+}
+
+/* TARJETAS DE ETAPAS */
+.stage-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.stage-card {
+    background: var(--panel-bg);
+    border: 2px solid var(--border-col);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.stage-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(250, 204, 21, 0.6);
+}
+
+.stage-card.selected {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 24px rgba(250, 204, 21, 0.22);
+}
+
+.stage-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stage-badge {
+    background: rgba(56, 189, 248, 0.18);
+    color: var(--accent-blue);
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.surface-tag {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.stage-card h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.stage-desc {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    flex-grow: 1;
+}
+
+.stage-record-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.record-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.record-value {
+    font-family: 'Courier New', monospace;
+    font-size: 1.25rem;
+    color: var(--accent-yellow);
+    letter-spacing: 1px;
+}
+
+.play-stage-btn {
+    background: linear-gradient(135deg, #facc15, #f97316);
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 900;
+    font-size: 0.92rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.play-stage-btn:hover {
+    filter: brightness(1.08);
+}
+
+.play-stage-btn:active {
+    transform: scale(0.98);
+}
+
+/* PIE DEL MENÚ */
+.menu-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid var(--border-col);
+    padding-top: 14px;
+    font-size: 0.85rem;
+}
+
+.controls-guide {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    color: var(--text-muted);
+}
+
+kbd {
+    background: #334155;
+    color: #f8fafc;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-bottom: 2px solid #0f172a;
+    margin-right: 3px;
+}
+
+.rule-highlight {
+    background: rgba(249, 115, 22, 0.14);
+    border-left: 4px solid var(--accent-orange);
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #fed7aa;
+}
+
+/* BOTONES GENERALES */
+.primary-btn, .secondary-btn, .hud-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: all 0.15s ease;
+}
+
+.primary-btn {
+    background: var(--accent-yellow);
+    color: #0f172a;
+}
+
+.primary-btn.accent {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+}
+
+.secondary-btn {
+    background: rgba(51, 65, 85, 0.85);
+    color: var(--text-main);
+    border: 1px solid var(--border-col);
+}
+
+.secondary-btn:hover, .hud-btn:hover {
+    background: rgba(71, 85, 105, 0.95);
+}
+
+.secondary-btn.danger-hover:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: var(--accent-red);
+    color: #fecaca;
+}
+
+/* HUD EN CARRERA */
+.hud-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hud-top-left {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-col);
+    border-radius: 12px;
+    padding: 14px 18px;
+    min-width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+}
+
+.hud-stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.hud-stage-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+.hud-mode-pill {
+    background: rgba(250, 204, 21, 0.18);
+    color: var(--accent-yellow);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 99px;
+}
+
+.hud-timers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.timer-box {
+    background: rgba(2, 6, 23, 0.65);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.timer-label {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.timer-digits {
+    font-family: 'Courier New', monospace;
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.timer-digits.best {
+    color: var(--accent-yellow);
+}
+
+.hud-progress-bar-text {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    letter-spacing: 0.5px;
+}
+
+.hud-top-right {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.hud-btn {
+    background: var(--bg-dark);
+    color: #ffffff;
+    border: 1px solid var(--border-col);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+/* VELOCÍMETRO Y ALERTA DEL 60% FUERA DE PISTA */
+.hud-bottom-left {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    width: 310px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.surface-status {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 900;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.surface-status.on-track {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid var(--accent-green);
+    color: #86efac;
+}
+
+.surface-status.off-track {
+    background: rgba(239, 68, 68, 0.88);
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    animation: pulseAlert 0.45s infinite alternate;
+}
+
+@keyframes pulseAlert {
+    from { transform: scale(1); }
+    to { transform: scale(1.03); }
+}
+
+.speedometer-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-col);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+}
+
+.speed-Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+
+.speed-number {
+    font-family: 'Courier New', monospace;
+    font-size: 2.3rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.speed-unit {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.speed-pct-box {
+    text-align: right;
+}
+
+.speed-pct-box span {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.speed-pct-box strong {
+    font-size: 1rem;
+    color: var(--accent-yellow);
+}
+
+.speed-bar-track {
+    position: relative;
+    height: 14px;
+    background: rgba(2, 6, 23, 0.85);
+    border-radius: 99px;
+    overflow: visible;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.speed-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.06s linear;
+}
+
+.speed-bar-fill.on-track {
+    background: linear-gradient(90deg, #22c55e, #facc15, #f97316);
+}
+
+.speed-bar-fill.off-track {
+    background: linear-gradient(90deg, #f97316, #ef4444);
+}
+
+.speed-limit-marker {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    background: #ffffff;
+}
+
+.speed-limit-marker span {
+    position: absolute;
+    top: -15px;
+    left: -12px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #cbd5e1;
+}
+
+/* MINIMAPA EN ESQUINA INFERIOR DERECHA */
+.hud-bottom-right {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+}
+
+.minimap-wrapper {
+    background: var(--bg-dark);
+    border: 2px solid var(--border-col);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.minimap-header {
+    background: rgba(2, 6, 23, 0.8);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 5px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-col);
+}
+
+#minimapCanvas {
+    display: block;
+}
+
+/* TOAST DE CHECKPOINT */
+.checkpoint-toast {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.92);
+    border: 2px solid var(--accent-yellow);
+    color: var(--accent-yellow);
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* CUENTA ATRÁS (3, 2, 1, ¡YA!) */
+.countdown-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.countdown-box {
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid var(--border-col);
+    border-radius: 20px;
+    padding: 24px 48px;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+}
+
+.semaphore-lights {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.rally-light {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 2px solid #475569;
+}
+
+.rally-light.red {
+    background: #ef4444;
+    box-shadow: 0 0 18px #ef4444;
+}
+
+.rally-light.green {
+    background: #22c55e;
+    box-shadow: 0 0 20px #22c55e;
+}
+
+.countdown-number {
+    font-size: 5.5rem;
+    font-weight: 900;
+    line-height: 1;
+    margin: 6px 0;
+}
+
+.countdown-number.prep {
+    color: var(--accent-yellow);
+    text-shadow: 0 0 25px rgba(250, 204, 21, 0.5);
+}
+
+.countdown-number.go {
+    color: var(--accent-green);
+    text-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
+}
+
+.countdown-sub {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+}
+
+/* MODAL DE FINAL DE ETAPA */
+.finish-modal {
+    background: var(--bg-dark);
+    border: 2px solid var(--accent-yellow);
+    border-radius: 18px;
+    padding: 32px 38px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+}
+
+.finish-flag {
+    color: var(--accent-yellow);
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    font-size: 0.9rem;
+}
+
+.finish-modal h2 {
+    font-size: 1.75rem;
+    color: #ffffff;
+}
+
+.finish-mode-sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.record-status-badge {
+    padding: 8px 14px;
+    border-radius: 99px;
+    font-weight: 800;
+    font-size: 0.88rem;
+    background: rgba(148, 163, 184, 0.15);
+    color: #e2e8f0;
+}
+
+.record-status-badge.new-record {
+    background: rgba(250, 204, 21, 0.2);
+    color: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
+}
+
+.finish-times-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 6px 0;
+}
+
+.finish-time-card {
+    background: rgba(2, 6, 23, 0.75);
+    border: 1px solid var(--border-col);
+    padding: 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.finish-time-card span {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.finish-time-card strong {
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+.finish-time-card.best strong {
+    color: var(--accent-yellow);
+}
+
+.finish-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+@media (max-width: 860px) {
+    .stage-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}

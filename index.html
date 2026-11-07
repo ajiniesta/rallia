@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WRC Top-Down Rally Championship</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <!-- Lienzo principal del juego a pantalla completa -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- MENÚ PRINCIPAL Y SELECTOR DE LAS 3 ETAPAS -->
+    <div id="menuOverlay" class="overlay-screen">
+        <div class="menu-panel">
+            <header class="menu-header">
+                <div class="title-block">
+                    <span class="wrc-tag">TOP-DOWN RALLY ARCADE</span>
+                    <h1>RALLY STAGE CHAMPIONSHIP</h1>
+                    <p>Conducción cenital sobre tierra, nieve y desierto con cronometraje por etapa</p>
+                </div>
+                <div class="header-actions">
+                    <button id="muteBtn" class="secondary-btn">🔊 Sonido: ON</button>
+                    <button id="clearRecordsBtn" class="secondary-btn danger-hover" title="Borrar tiempos guardados">🗑️ Borrar Tiempos</button>
+                </div>
+            </header>
+
+            <!-- Selector de formato de carrera: Punto A -> B (por defecto) o Circuito -->
+            <div class="mode-selector-bar">
+                <span class="mode-label">FORMATO DE ETAPA:</span>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="point_to_point">
+                        🚩 Tramo Rally (Punto A → Punto B)
+                    </button>
+                    <button class="mode-btn" data-mode="circuit">
+                        🔄 Circuito Cerrado (3 Vueltas)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjetas de las 3 Etapas -->
+            <div id="stageCardsContainer" class="stage-cards-grid"></div>
+
+            <!-- Instrucciones y Reglas del Rally -->
+            <footer class="menu-footer">
+                <div class="controls-guide">
+                    <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> Conducir</div>
+                    <div><kbd>ESPACIO</kbd> Freno de mano (Derrape)</div>
+                    <div><kbd>R</kbd> Reposicionar en pista</div>
+                    <div><kbd>ESC</kbd> Volver al menú</div>
+                </div>
+                <div class="rule-highlight">
+                    ⚠️ <strong>Regla de Superficie:</strong> Al salirse del circuito el coche desacelera y queda limitado a un máximo del <strong>60%</strong> de su velocidad máxima.
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- HUD EN CARRERA -->
+    <div id="hudOverlay" class="hud-layer hidden">
+        <!-- Barra superior izquierda: Información de Etapa y Cronómetro -->
+        <div class="hud-top-left">
+            <div class="hud-stage-header">
+                <span id="hudStageName" class="hud-stage-title">ETAPA 1: Bosque de Finlandia</span>
+                <span id="hudModeBadge" class="hud-mode-pill">TRAMO PUNTO A → B</span>
+            </div>
+            <div class="hud-timers">
+                <div class="timer-box primary">
+                    <span class="timer-label">TIEMPO ETAPA</span>
+                    <span id="hudCurrentTime" class="timer-digits">00:00.000</span>
+                </div>
+                <div class="timer-box">
+                    <span class="timer-label">MEJOR TIEMPO</span>
+                    <span id="hudBestTime" class="timer-digits best">--:--.---</span>
+                </div>
+            </div>
+            <div id="hudProgressText" class="hud-progress-bar-text">
+                PROGRESO TRAMO: 0% • CONTROL 0/5
+            </div>
+        </div>
+
+        <!-- Notificación central de Checkpoint / Vuelta -->
+        <div id="checkpointToast" class="checkpoint-toast hidden">
+            ✓ CP 1 — 00:12.340
+        </div>
+
+        <!-- Botones rápidos arriba a la derecha -->
+        <div class="hud-top-right">
+            <button id="hudRestartBtn" class="hud-btn">↻ Reiniciar Etapa</button>
+            <button id="hudMenuBtn" class="hud-btn">☰ Etapas</button>
+        </div>
+
+        <!-- Esquina inferior izquierda: Velocímetro y Estado de Superficie (100% vs 60%) -->
+        <div class="hud-bottom-left">
+            <div id="hudSurfaceStatus" class="surface-status on-track">
+                ✓ EN PISTA (MÁX 100%)
+            </div>
+            <div class="speedometer-card">
+                <div class="speed-Header">
+                    <div class="speed-main">
+                        <span id="hudSpeedValue" class="speed-number">0</span>
+                        <span class="speed-unit">KM/H</span>
+                    </div>
+                    <div class="speed-pct-box">
+                        <span>POTENCIA VEL.</span>
+                        <strong id="hudSpeedPct">0%</strong>
+                    </div>
+                </div>
+                <div class="speed-bar-track">
+                    <div id="hudSpeedBarFill" class="speed-bar-fill on-track" style="width: 0%"></div>
+                    <!-- Marca divisoria del 60% (límite fuera de pista) -->
+                    <div class="speed-limit-marker" style="left: 60%" title="Límite 60% Fuera de Pista">
+                        <span>60%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Esquina inferior derecha: Minimapa del Tramo / Circuito -->
+        <div class="hud-bottom-right">
+            <div class="minimap-wrapper">
+                <div class="minimap-header">MINIMAPA DEL TRAMO</div>
+                <canvas id="minimapCanvas" width="220" height="175"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPERPOSICIÓN DE CUENTA ATRÁS (3, 2, 1, ¡YA!) -->
+    <div id="countdownOverlay" class="countdown-layer hidden">
+        <div class="countdown-box">
+            <div class="semaphore-lights">
+                <div class="rally-light red"></div>
+                <div class="rally-light"></div>
+                <div class="rally-light"></div>
+            </div>
+            <div id="countdownNumber" class="countdown-number prep">3</div>
+            <div class="countdown-sub">PREPÁRATE PARA LA SALIDA</div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE META Y TIEMPO REGISTRADO -->
+    <div id="finishOverlay" class="overlay-screen hidden">
+        <div class="finish-modal">
+            <span class="finish-flag">🏁 ¡ETAPA COMPLETADA!</span>
+            <h2 id="finishStageTitle">ETAPA 1: Bosque de Finlandia</h2>
+            <p id="finishModeLabel" class="finish-mode-sub">Modo: Tramo Punto A → B</p>
+
+            <div id="newRecordBadge" class="record-status-badge new-record">
+                🏆 ¡NUEVO RÉCORD DE LA ETAPA!
+            </div>
+
+            <div class="finish-times-grid">
+                <div class="finish-time-card">
+                    <span>TIEMPO OBTENIDO</span>
+                    <strong id="finishCurrentTime">00:42.180</strong>
+                </div>
+                <div class="finish-time-card best">
+                    <span>MEJOR TIEMPO GUARDADO</span>
+                    <strong id="finishBestTime">00:42.180</strong>
+                </div>
+            </div>
+
+            <div class="finish-actions">
+                <button id="retryStageBtn" class="primary-btn">↻ Repetir Etapa</button>
+                <button id="nextStageBtn" class="primary-btn accent">⏭️ Siguiente Etapa</button>
+                <button id="backToMenuBtn" class="secondary-btn">☰ Volver al Menú</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/game.js"></script>
+</body>
+</html>
