@@ -3,9 +3,84 @@
 
 export const OFF_TRACK_MAX_SPEED_RATIO = 0.60; // Máximo 60% de la velocidad máxima al salirse del circuito
 
+export const CAR_MODELS = [
+    {
+        id: 'wrc_rally1',
+        name: 'Apex WRC Rally1',
+        category: 'WRC Híbrido 4WD',
+        description: 'Equilibrado y rápido. Gran tracción integral y aceleración contundente.',
+        color: '#ef4444',
+        accentColor: '#0284c7',
+        spriteKey: 'car_png',
+        maxSpeed: 560,
+        acceleration: 420,
+        braking: 650,
+        turnRate: 3.2,
+        lateralGripMult: 1.0,
+        stats: { speed: 85, accel: 88, handling: 82 }
+    },
+    {
+        id: 'classic_stratos',
+        name: 'Stratos Turbo 70s',
+        category: 'Leyenda RWD Grupo 4',
+        description: 'Extremadamente ágil y propenso al derrape. Velocidad punta alta pero exige manos firmes.',
+        color: '#10b981',
+        accentColor: '#facc15',
+        spriteKey: 'car_stratos',
+        maxSpeed: 580,
+        acceleration: 440,
+        braking: 620,
+        turnRate: 3.55,
+        lateralGripMult: 0.88, // Más derrapador
+        stats: { speed: 92, accel: 85, handling: 75 }
+    },
+    {
+        id: 'beast_group_b',
+        name: 'Quattro Beast B',
+        category: 'Grupo B Evolution',
+        description: 'Potencia salvaje y aceleración brutal con tracción sobre todas las superficies.',
+        color: '#eab308',
+        accentColor: '#1e293b',
+        spriteKey: 'car_quattro',
+        maxSpeed: 570,
+        acceleration: 480,
+        braking: 690,
+        turnRate: 3.05,
+        lateralGripMult: 1.08,
+        stats: { speed: 88, accel: 98, handling: 80 }
+    },
+    {
+        id: 'subie_imprez',
+        name: 'Blue Boxer WRX',
+        category: 'Rally Clásico AWD',
+        description: 'Control quirúrgico y máximo agarre en curvas reviradas, ideal para tramos técnicos.',
+        color: '#2563eb',
+        accentColor: '#facc15',
+        spriteKey: 'car_boxer',
+        maxSpeed: 545,
+        acceleration: 430,
+        braking: 670,
+        turnRate: 3.4,
+        lateralGripMult: 1.12,
+        stats: { speed: 80, accel: 86, handling: 94 }
+    }
+];
+
 export class Car {
-    constructor(x = 0, y = 0, angle = 0) {
+    constructor(x = 0, y = 0, angle = 0, modelConfig = CAR_MODELS[0]) {
+        this.modelConfig = modelConfig;
         this.reset(x, y, angle);
+    }
+
+    applyModel(modelConfig) {
+        if (!modelConfig) return;
+        this.modelConfig = modelConfig;
+        this.maxSpeed = modelConfig.maxSpeed || 560;
+        this.maxOffTrackSpeed = this.maxSpeed * OFF_TRACK_MAX_SPEED_RATIO;
+        this.acceleration = modelConfig.acceleration || 410;
+        this.braking = modelConfig.braking || 640;
+        this.turnRate = modelConfig.turnRate || 3.15;
+        this.lateralGripMult = modelConfig.lateralGripMult || 1.0;
     }
 
     reset(x, y, angle) {
@@ -20,17 +95,19 @@ export class Car {
         this.vx = 0;
         this.vy = 0;
 
-        // Parámetros de rendimiento del coche de Rally
-        this.maxSpeed = 560;              // px/s en pista (100% -> mostrado como 200 km/h en HUD)
-        this.maxOffTrackSpeed = this.maxSpeed * OFF_TRACK_MAX_SPEED_RATIO; // 60% exacto (336 px/s -> 120 km/h)
+        // Parámetros de rendimiento según el modelo seleccionado
+        const m = this.modelConfig || CAR_MODELS[0];
+        this.maxSpeed = m.maxSpeed || 560; // px/s en pista (100% -> mostrado como 200 km/h en HUD)
+        this.maxOffTrackSpeed = this.maxSpeed * OFF_TRACK_MAX_SPEED_RATIO; // 60% exacto
         this.maxReverseSpeed = -170;
 
-        this.acceleration = 410;          // px/s²
-        this.braking = 640;               // px/s²
+        this.acceleration = m.acceleration || 410;          // px/s²
+        this.braking = m.braking || 640;                    // px/s²
+        this.turnRate = m.turnRate || 3.15;                 // rad/s
+        this.lateralGripMult = m.lateralGripMult || 1.0;
+
         this.offTrackDeceleration = 540;  // Desaceleración firme al salirse de pista por encima del 60%
         this.rollingResistance = 150;     // Fricción al soltar el acelerador
-
-        this.turnRate = 3.15;             // rad/s
         this.steerAngle = 0;              // Ángulo visual de las ruedas delanteras
 
         // Estado de superficie y derrape
@@ -141,7 +218,7 @@ export class Car {
         const targetVy = forwardY * this.speed;
 
         // Nivel de agarre lateral (menor con freno de mano o fuera de pista)
-        let lateralGrip = surfaceGrip * (isOnTrack ? 7.5 : 5.2);
+        let lateralGrip = surfaceGrip * (isOnTrack ? 7.5 : 5.2) * (this.lateralGripMult || 1.0);
         if (this.isHandbrake) lateralGrip *= 0.42;
 
         const blend = Math.min(1, lateralGrip * dt);

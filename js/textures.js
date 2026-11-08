@@ -178,7 +178,25 @@ export class AssetManager {
     }
 
     createProceduralSprites() {
-        // 1. Sprite de coche de Rally de alta resolución (mirando hacia la DERECHA: ángulo 0)
+        // Sprite del Coche de Rally WRC (por defecto)
+        this.canvases.carSprite = this.createCarSpriteCanvas('#f1f5f9', '#ef4444', '#0284c7', '1');
+
+        // Modelos de coches seleccionables
+        this.canvases.car_wrc_rally1 = this.canvases.carSprite;
+        this.canvases.car_stratos = this.createCarSpriteCanvas('#10b981', '#facc15', '#047857', '7');
+        this.canvases.car_quattro = this.createCarSpriteCanvas('#facc15', '#1e293b', '#dc2626', '4');
+        this.canvases.car_boxer = this.createCarSpriteCanvas('#2563eb', '#facc15', '#1d4ed8', '5');
+
+        // 2. Árboles y adornos exteriores pre-renderizados
+        this.canvases.pineTree = this.createPineTreeSprite('#1e4620', '#2d6a30', '#3b853f', false);
+        this.canvases.snowPineTree = this.createPineTreeSprite('#1f3b34', '#2e554c', '#e2eff7', true);
+        this.canvases.desertBush = this.createBushSprite();
+        this.canvases.rockGray = this.createRockSprite('#64748b', '#94a3b8', '#334155');
+        this.canvases.rockRed = this.createRockSprite('#9a4826', '#c2643b', '#5e2912');
+        this.canvases.tireBarrier = this.createTireBarrierSprite();
+    }
+
+    createCarSpriteCanvas(bodyColor = '#f1f5f9', liveryColor = '#ef4444', stripeColor = '#0284c7', number = '1') {
         const carC = document.createElement('canvas');
         carC.width = 128;
         carC.height = 76;
@@ -199,11 +217,11 @@ export class AssetManager {
         this.roundRect(ctx, 16, -26, 20, 8, 3);  ctx.fill(); // Delantera izq
         this.roundRect(ctx, 16, 18, 20, 8, 3);   ctx.fill(); // Delantera der
 
-        // Carrocería principal (Blanco competición WRC)
+        // Carrocería principal
         const bodyGrad = ctx.createLinearGradient(-44, -22, 44, 22);
-        bodyGrad.addColorStop(0, '#f1f5f9');
+        bodyGrad.addColorStop(0, bodyColor);
         bodyGrad.addColorStop(0.5, '#ffffff');
-        bodyGrad.addColorStop(1, '#e2e8f0');
+        bodyGrad.addColorStop(1, bodyColor);
         ctx.fillStyle = bodyGrad;
         this.roundRect(ctx, -44, -22, 88, 44, 11);
         ctx.fill();
@@ -212,8 +230,8 @@ export class AssetManager {
         ctx.strokeStyle = '#334155';
         ctx.stroke();
 
-        // Decoración / Livery Rally (Bandas rojas y azul marino tipo WRC)
-        ctx.fillStyle = '#ef4444';
+        // Decoración / Livery Rally
+        ctx.fillStyle = liveryColor;
         ctx.beginPath();
         ctx.moveTo(-40, -21);
         ctx.lineTo(15, -21);
@@ -230,8 +248,8 @@ export class AssetManager {
         ctx.closePath();
         ctx.fill();
 
-        // Franja central deportiva azul
-        ctx.fillStyle = '#0284c7';
+        // Franja central deportiva
+        ctx.fillStyle = stripeColor;
         ctx.fillRect(-40, -5, 82, 10);
 
         // Capó delantero con rejillas de ventilación
@@ -272,17 +290,17 @@ export class AssetManager {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Dorsal "1" en el techo
+        // Dorsal en el techo
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(-12, -9, 12, 18);
         ctx.fillStyle = '#facc15';
         ctx.font = 'bold 12px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('1', -6, 0);
+        ctx.fillText(number, -6, 0);
 
         // Toma de aire en el techo
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = liveryColor;
         this.roundRect(ctx, -1, -4, 6, 8, 2);
         ctx.fill();
 
@@ -290,7 +308,7 @@ export class AssetManager {
         ctx.fillStyle = '#0f172a';
         this.roundRect(ctx, -45, -21, 9, 42, 2);
         ctx.fill();
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = liveryColor;
         ctx.fillRect(-44, -19, 6, 38);
 
         // Batería de 4 faros suplementarios de rally en el morro (derecha)
@@ -302,15 +320,7 @@ export class AssetManager {
         }
 
         ctx.restore();
-        this.canvases.carSprite = carC;
-
-        // 2. Árboles y adornos exteriores pre-renderizados
-        this.canvases.pineTree = this.createPineTreeSprite('#1e4620', '#2d6a30', '#3b853f', false);
-        this.canvases.snowPineTree = this.createPineTreeSprite('#1f3b34', '#2e554c', '#e2eff7', true);
-        this.canvases.desertBush = this.createBushSprite();
-        this.canvases.rockGray = this.createRockSprite('#64748b', '#94a3b8', '#334155');
-        this.canvases.rockRed = this.createRockSprite('#9a4826', '#c2643b', '#5e2912');
-        this.canvases.tireBarrier = this.createTireBarrierSprite();
+        return carC;
     }
 
     createPineTreeSprite(darkColor, midColor, topColor, hasSnow) {

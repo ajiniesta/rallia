@@ -295,8 +295,15 @@ export class Renderer {
         ctx.roundRect(-34, -17, 70, 38, 9);
         ctx.fill();
 
-        // Usar la textura generada del coche de rally (o el sprite procedural de alta nitidez)
-        const carImg = this.assets.images.car_png || this.assets.canvases.carSprite;
+        // Obtener sprite según el coche seleccionado
+        const modelId = car.modelConfig ? car.modelConfig.id : 'wrc_rally1';
+        let carImg = null;
+        if (modelId === 'wrc_rally1') {
+            carImg = this.assets.images.car_png || this.assets.canvases.carSprite;
+        } else {
+            carImg = this.assets.canvases[`car_${modelId}`] || this.assets.canvases.carSprite;
+        }
+
         if (carImg) {
             ctx.drawImage(carImg, -36, -21, 72, 42);
         }

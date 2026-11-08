@@ -2,7 +2,7 @@
 // Bucle principal del juego, máquina de estados (MENU, COUNTDOWN, RACING, FINISHED), controles y HUD
 
 import { STAGE_CONFIGS, Track } from './tracks.js';
-import { Car, OFF_TRACK_MAX_SPEED_RATIO } from './car.js';
+import { Car, CAR_MODELS, OFF_TRACK_MAX_SPEED_RATIO } from './car.js';
 import { AssetManager } from './textures.js';
 import { Renderer } from './renderer.js';
 import { StorageManager } from './storage.js';
@@ -21,9 +21,10 @@ export class RallyGame {
         this.state = 'MENU'; // 'MENU' | 'COUNTDOWN' | 'RACING' | 'FINISHED'
         this.selectedStageId = 'stage1';
         this.selectedMode = 'point_to_point'; // Por defecto Punto A -> Punto B
+        this.selectedCarId = CAR_MODELS[0].id;
 
         this.track = null;
-        this.car = new Car();
+        this.car = new Car(0, 0, 0, CAR_MODELS[0]);
 
         // Progreso de la etapa
         this.activeCheckpointIndex = 0;
@@ -53,6 +54,7 @@ export class RallyGame {
         this.loadStage(this.selectedStageId, this.selectedMode, false);
 
         this.bindEvents();
+        this.renderCarCards();
         this.renderMenuCards();
         this.updateBestTimesUI();
 
@@ -145,6 +147,86 @@ export class RallyGame {
         });
     }
 
+    renderCarCards() {
+        const container = document.getElementById('carCardsContainer');
+        const catLabel = document.getElementById('selectedCarCategory');
+        if (!container) return;
+        container.innerHTML = '';
+
+        CAR_MODELS.forEach((model) => {
+            const isSelected = model.id === this.selectedCarId;
+            const card = document.createElement('div');
+            card.className = `car-card ${isSelected ? 'selected' : ''}`;
+            card.dataset.carId = model.id;
+
+            card.innerHTML = `
+                <div class="car-card-header">
+                    <span class="car-name">${model.name}</span>
+                    <span class="car-cat-tag">${model.category}</span>
+                </div>
+                <div class="car-preview-box">
+                    <canvas class="car-card-canvas" width="100" height="54"></canvas>
+                </div>
+                <p class="car-desc">${model.description}</p>
+                <div class="car-stats-list">
+                    <div class="stat-row">
+                        <span>Velocidad</span>
+                        <div class="stat-bar"><div class="stat-fill" style="width: ${model.stats.speed}%"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span>Aceleración</span>
+                        <div class="stat-bar"><div class="stat-fill accel" style="width: ${model.stats.accel}%"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span>Manejo</span>
+                        <div class="stat-bar"><div class="stat-fill handling" style="width: ${model.stats.handling}%"></div></div>
+                    </div>
+                </div>
+            `;
+
+            // Dibujar vista previa del coche en el canvas de la tarjeta
+            const canvas = card.querySelector('.car-card-canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                let img = null;
+                if (model.id === 'wrc_rally1') {
+                    img = this.assets.images.car_png || this.assets.canvases.carSprite;
+                } else {
+                    img = this.assets.canvases[`car_${model.id}`] || this.assets.canvases.carSprite;
+                }
+                if (img) {
+                    ctx.drawImage(img, 14, 6, 72, 42);
+                }
+            }
+
+            card.addEventListener('click', () => {
+                this.selectCar(model.id);
+            });
+
+            container.appendChild(card);
+        });
+
+        const currentModel = CAR_MODELS.find((m) => m.id === this.selectedCarId);
+        if (catLabel && currentModel) {
+            catLabel.textContent = `${currentModel.name} • ${currentModel.category}`;
+        }
+    }
+
+    selectCar(carId) {
+        this.selectedCarId = carId;
+        const model = CAR_MODELS.find((m) => m.id === carId) || CAR_MODELS[0];
+        this.car.applyModel(model);
+
+        document.querySelectorAll('.car-card').forEach((c) => {
+            c.classList.toggle('selected', c.dataset.carId === carId);
+        });
+
+        const catLabel = document.getElementById('selectedCarCategory');
+        if (catLabel) {
+            catLabel.textContent = `${model.name} • ${model.category}`;
+        }
+    }
+
     renderMenuCards() {
         const container = document.getElementById('stageCardsContainer');
         if (!container) return;
@@ -205,6 +287,9 @@ export class RallyGame {
         this.selectedStageId = config.id;
         this.selectedMode = mode;
 
+        const model = CAR_MODELS.find((m) => m.id === this.selectedCarId) || CAR_MODELS[0];
+        this.car.applyModel(model);
+
         this.track = new Track(config, mode);
         const start = this.track.startPose;
         this.car.reset(start.x, start.y, start.angle);
@@ -226,6 +311,10 @@ export class RallyGame {
 
         // Actualizar textos del HUD
         document.getElementById('hudStageName').textContent = `ETAPA ${this.track.config.number}: ${this.track.config.name}`;
+        const carBadge = document.getElementById('hudCarBadge');
+        if (carBadge && this.car.modelConfig) {
+            carBadge.textContent = this.car.modelConfig.name;
+        }
         document.getElementById('hudModeBadge').textContent = mode === 'point_to_point' ? 'TRAMO PUNTO A → B' : 'CIRCUITO (3 VUELTAS)';
 
         const bestMs = this.storage.getBestTime(stageId, mode);
